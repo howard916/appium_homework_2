@@ -6,7 +6,6 @@ file_path = os.path.dirname(os.path.abspath(__file__))
 
 def handle_exception(func):
     def run(*args, **kwargs):
-        print(args)
         func_self = args[0]
         try:
             return func(*args, **kwargs)
