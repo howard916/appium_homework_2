@@ -1,11 +1,16 @@
 import re
-import yaml
+
+import allure
+
 from .black_list import handle_exception
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from driver import App
 import os
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 file_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -33,7 +38,7 @@ class BasePage(App):
                 else:
                     return WebDriverWait(self._driver, 5).until(lambda driver: by[1] in driver.page_source)
             else:
-                print(f': not except wait_type -> {wait_type}')
+                logging.warning(f': not except wait_type -> {wait_type}')
                 raise
 
         except TimeoutException:
@@ -43,7 +48,7 @@ class BasePage(App):
             self._driver.implicitly_wait(5)
 
     def _ui_scroll_find_ele(self, by: list):  # 官方使用uiautomator定位方式
-        print(': 执行UI滚动查询')
+        logging.info(': 执行UI滚动查询')
         by_name = None
         get_by = by[:]
         if get_by[0] == 'id':
@@ -60,9 +65,9 @@ class BasePage(App):
                     get_by[1] = mo.groups()[0]
                     by_name = 'text'
                 else:
-                    print(': when using xpath to scroll find eles, it only supports "text()" attribute')
+                    logging.warning(': when using xpath to scroll find eles, it only supports "text()" attribute')
             except Exception as e:
-                print(f': ui_scroll_find error {e.__class__.__name__}')
+                logging.error(f': ui_scroll_find error {e.__class__.__name__}')
 
         if get_by[0] == 'name':
             by_name = 'text'
@@ -78,9 +83,9 @@ class BasePage(App):
                 pass
 
             if ele_find:
-                print(':Scroll find ele success')
+                logging.info(':Scroll find ele success')
             else:
-                print(':Scroll cannot find ele')
+                logging.warning(':Scroll cannot find ele')
 
         else:
             ele_find = None
@@ -111,3 +116,7 @@ class BasePage(App):
         page_source = self._driver.page_source
         with open(f'{file_path}/page_source.xml', 'w', encoding='utf-8') as f:
             f.write(page_source)
+
+    def allure_screenshot(self, name=None):
+        allure.attach(self._driver.get_screenshot_as_png(), name=name,
+                      attachment_type=allure.attachment_type.PNG)
